@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双小六壬股票决策系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        :root {
+            --primary-bg: #000;
+            --secondary-bg: #111;
+            --accent-color: #fff;
+            --text-primary: #fff;
+            --text-secondary: #aaa;
+            --border-color: #333;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 300;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s forwards;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Mouse Follow Effect */
+        #mouse-follow-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .follow-element {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        /* Parallax Effect */
+        .parallax-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            transition: filter 0.5s, transform 0.5s;
+        }
+
+        /* Form Elements */
+        input, select, button {
+            background-color: var(--secondary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--text-primary);
+        }
+
+        button {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--text-primary);
+            color: var(--primary-bg);
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Tab Styles */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--text-primary);
+        }
+
+        /* Result Styles */
+        .result-section {
+            margin-top: 2rem;
+        }
+
+        .result-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+            border-left: 3px solid var(--text-primary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Mouse Follow Container -->
+    <div id="mouse-follow-container"></div>
+
+    <!-- Parallax Background -->
+    <div class="parallax-bg">
+        <div class="absolute inset-0 flex items-center justify-center opacity-5">
+            <div class="text-9xl font-light">六壬</div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="py-8 border-b border-gray-800">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-3xl font-light">双小六壬<span id="typing-text" class="font-normal"></span></h1>
+            <nav>
+                <ul class="flex space-x-8">
+                    <li><a href="#analysis" class="text-gray-400 hover:text-white transition-colors">决策分析</a></li>
+                    <li><a href="#history" class="text-gray-400 hover:text-white transition-colors">历史记录</a></li>
+                    <li><a href="#guide" class="text-gray-400 hover:text-white transition-colors">使用指南</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto py-16">
+        <!-- Hero Section -->
+        <section class="mb-24 text-center">
+            <h2 class="text-5xl font-light mb-4 opacity-0" data-scroll-reveal>双小六壬股票决策系统</h2>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto opacity-0" data-scroll-reveal data-delay="200">
+                <span class="char-reveal">通过传统小六壬与全息小六壬的双法交叉验证，为您提供精准的股票决策建议。</span>
+            </p>
+        </section>
+
+        <!-- Analysis Section -->
+        <section id="analysis" class="mb-24">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Input Form -->
+                <div class="lg:col-span-1 card">
+                    <h3 class="text-2xl font-light mb-6">输入信息</h3>
+                    <form id="stock-form">
+                        <div class="mb-6">
+                            <label class="block text-sm text-gray-400 mb-2">股票代码</label>
+                            <input type="text" id="stock-code" placeholder="请输入股票代码，如：600000" class="w-full">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm text-gray-400 mb-2">查询类型</label>
+                            <select id="query-type" class="w-full">
+                                <option value="进场">进场时机</option>
+                                <option value="加仓">加仓时机</option>
+                                <option value="减仓">减仓时机</option>
+                                <option value="出场">出场时机</option>
+                            </select>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm text-gray-400 mb-2">当前时间（北京时间）</label>
+                            <div class="bg-black/50 rounded-lg p-4 border border-gray-700 text-center">
+                                <p class="text-xl font-bold" id="current-lunar-time">腊月十七，申时</p>
+                                <p class="text-sm text-gray-400 mt-1">阳历：2026年2月4日</p>
+                                <input type="hidden" id="lunar-month" value="12">
+                                <input type="hidden" id="lunar-day" value="17">
+                                <input type="hidden" id="lunar-hour" value="8">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-3 text-lg">开始分析</button>
+                    </form>
+                </div>
+
+                <!-- Results -->
+                <div class="lg:col-span-2 card">
+                    <h3 class="text-2xl font-light mb-6">决策结果</h3>
+                    <div id="result-container" class="space-y-6">
+                        <div class="text-center text-gray-400 py-12">
+                            <p class="mb-4">请输入股票代码并点击“开始分析”</p>
+                            <i data-lucide="arrow-left" class="mx-auto"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section id="history" class="mb-24">
+            <h3 class="text-3xl font-light mb-8 opacity-0" data-scroll-reveal>历史决策</h3>
+            <div class="card">
+                <div id="history-container" class="space-y-4">
+                    <div class="text-center text-gray-400 py-12">
+                        <p>暂无历史决策记录</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Guide Section -->
+        <section id="guide">
+            <h3 class="text-3xl font-light mb-8 opacity-0" data-scroll-reveal>使用指南</h3>
+            <div class="card">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-4 opacity-0" data-scroll-reveal data-delay="200">
+                        <h4 class="text-xl font-medium mb-4">什么是双小六壬？</h4>
+                        <p class="text-gray-400">双小六壬是一种传统的占卜方法，通过结合传统小六壬和全息小六壬进行交叉验证，提高预测的准确性。本系统将这一方法应用于股票市场，为您提供进场、加减仓和出场时机的决策建议。</p>
+                    </div>
+                    <div class="space-y-4 opacity-0" data-scroll-reveal data-delay="300">
+                        <h4 class="text-xl font-medium mb-4">如何使用？</h4>
+                        <ol class="list-decimal list-inside text-gray-400 space-y-2">
+                            <li>输入您关注的股票代码</li>
+                            <li>选择查询类型（进场、加仓、减仓或出场）</li>
+                            <li>系统会自动获取当前时间并进行分析</li>
+                            <li>查看决策结果并根据建议进行操作</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="mt-12 pt-8 border-t border-gray-800 opacity-0" data-scroll-reveal data-delay="400">
+                    <h4 class="text-xl font-medium mb-4">风险提示</h4>
+                    <p class="text-gray-400">本系统提供的决策建议仅供参考，不构成任何投资建议。股票市场有风险，投资需谨慎。请您在做出任何投资决策前，充分了解相关风险，并根据自身情况做出判断。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-gray-800">
+        <div class="container mx-auto text-center text-gray-400">
+            <p>&copy; 2026 双小六壬股票决策系统. All Rights Reserved.</p>
+            <p class="mt-2 text-sm">本系统仅供学习和研究使用，不构成投资建议。</p>
+        </div>
+    </footer>
+
+    <script>
+        // Typing Effect
+        const typingEffect = (element, words, typingSpeed = 100, pauseTime = 1000) => {
+            let wordIndex = 0;
+            let charIndex = 0;
+            let isDeleting = false;
+        
+            function type() {
+                const currentWord = words[wordIndex];
+            
+                if (isDeleting) {
+                    element.textContent = currentWord.substring(0, charIndex - 1);
+                    charIndex--;
+                } else {
+                    element.textContent = currentWord.substring(0, charIndex + 1);
+                    charIndex++;
+                }
+            
+                if (!isDeleting && charIndex === currentWord.length) {
+                    isDeleting = true;
+                    setTimeout(type, pauseTime);
+                } else if (isDeleting && charIndex === 0) {
+                    isDeleting = false;
+                    wordIndex = (wordIndex + 1) % words.length;
+                    setTimeout(type, 200);
+                } else {
+                    setTimeout(type, isDeleting ? typingSpeed/2 : typingSpeed);
+                }
+            }
+        
+            type();
+        };
+
+        // Mouse Follow Effect
+        const mouseFollowEffect = () => {
+            const container = document.getElementById('mouse-follow-container');
+            let lastX = 0, lastY = 0;
+            const minDistance = 50;
+        
+            document.addEventListener('mousemove', (e) => {
+                const currentX = e.clientX;
+                const currentY = e.clientY;
+            
+                const distance = Math.sqrt(
+                    Math.pow(currentX - lastX, 2) + Math.pow(currentY - lastY, 2)
+                );
+            
+                if (distance > minDistance) {
+                    createFollowElement(currentX, currentY);
+                    lastX = currentX;
+                    lastY = currentY;
+                }
+            });
+        
+            function createFollowElement(x, y) {
+                const element = document.createElement('div');
+                element.className = 'follow-element';
+                element.style.left = `${x}px`;
+                element.style.top = `${y}px`;
+            
+                container.appendChild(element);
+            
+                setTimeout(() => {
+                    element.style.opacity = '0';
+                    element.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                
+                    setTimeout(() => {
+                        container.removeChild(element);
+                    }, 500);
+                }, 10);
+            }
+        };
+
+        // Parallax Effect
+        const parallaxEffect = () => {
+            const background = document.querySelector('.parallax-bg');
+            const maxBlur = 15;
+            const minScale = 0.6;
+        
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                const scrollPercent = Math.min(scrollY / window.innerHeight, 1);
+            
+                const currentBlur = scrollPercent * maxBlur;
+                const currentScale = 1 - (scrollPercent * (1 - minScale));
+            
+                background.style.filter = `blur(${currentBlur}px)`;
+                background.style.transform = `scale(${currentScale})`;
+            });
+        };
+
+        // Scroll Reveal Effect
+        const setupScrollReveal = () => {
+            const revealElements = document.querySelectorAll('[data-scroll-reveal]');
+        
+            const revealOnScroll = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const element = entry.target;
+                        const delay = element.getAttribute('data-delay') || 0;
+                    
+                        setTimeout(() => {
+                            element.classList.add('animate-fade-in');
+                        
+                            const charElements = element.querySelectorAll('.char-reveal');
+                            charElements.forEach(charEl => {
+                                const text = charEl.textContent;
+                                charEl.textContent = '';
+                            
+                                for (let i = 0; i < text.length; i++) {
+                                    const span = document.createElement('span');
+                                    span.textContent = text[i];
+                                    span.style.opacity = '0';
+                                    span.style.filter = 'blur(4px)';
+                                    span.style.transition = 'all 0.3s';
+                                    span.style.transitionDelay = `${i * 30}ms`;
+                                    charEl.appendChild(span);
+                                  
+                                    setTimeout(() => {
+                                        span.style.opacity = '1';
+                                        span.style.filter = 'blur(0)';
+                                    }, 10);
+                                }
+                            });
+                        }, delay);
+                    
+                        revealOnScroll.unobserve(element);
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -100px 0px'
+            });
+        
+            revealElements.forEach(element => {
+                revealOnScroll.observe(element);
+            });
+        };
+
+        // Liu Ren Calculation Logic
+        const liuRenCalculator = {
+            // Traditional Liu Ren
+            traditional: {
+                getMonth: (month) => {
+                    const months = ['', '大安', '留连', '速喜', '赤口', '小吉', '空亡'];
+                    return months[month % 6] || months[6];
+                },
+                getDay: (day) => {
+                    const days = ['', '大安', '留连', '速喜', '赤口', '小吉', '空亡'];
+                    return days[day % 6] || days[6];
+                },
+                getHour: (hour) => {
+                    const hours = ['', '大安', '留连', '速喜', '赤口', '小吉', '空亡'];
+                    return hours[hour % 6] || hours[6];
+                }
+            },
+            
+            // Holographic Liu Ren
+            holographic: {
+                getMonth: (month) => {
+                    const months = ['', '速喜', '赤口', '小吉', '空亡', '大安', '留连'];
+                    return months[month % 6] || months[6];
+                },
+                getDay: (day) => {
+                    const days = ['', '速喜', '赤口', '小吉', '空亡', '大安', '留连'];
+                    return days[day % 6] || days[6];
+                },
+                getHour: (hour) => {
+                    const hours = ['', '速喜', '赤口', '小吉', '空亡', '大安', '留连'];
+                    return hours[hour % 6] || hours[6];
+                }
+            },
+            
+            // Get overall result based on three combinations
+            getOverallResult: (monthResult, dayResult, hourResult) => {
+                const count = {};
+                [monthResult, dayResult, hourResult].forEach(result => {
+                    count[result] = (count[result] || 0) + 1;
+                });
+                
+                let maxCount = 0;
+                let mainResult = '';
+                for (const [result, cnt] of Object.entries(count)) {
+                    if (cnt > maxCount) {
+                        maxCount = cnt;
+                        mainResult = result;
+                    }
+                }
+                
+                return mainResult;
+            },
+            
+            // Get stock decision based on Liu Ren result and query type
+            getStockDecision: (traditionalResult, holographicResult, queryType) => {
+                const decisions = {
+                    '进场': {
+                        '大安': '强烈建议进场，市场可能出现大幅上涨。',
+                        '留连': '建议观望，等待更好的进场时机。',
+                        '速喜': '可以进场，短期可能有不错的收益。',
+                        '赤口': '谨慎进场，可能存在一定风险。',
+                        '小吉': '适合进场，中期看好。',
+                        '空亡': '不建议进场，市场可能下跌。'
+                    },
+                    '加仓': {
+                        '大安': '强烈建议加仓，后市看涨。',
+                        '留连': '暂时不加仓，等待回调。',
+                        '速喜': '可以加仓，短期有上涨空间。',
+                        '赤口': '谨慎加仓，注意风险控制。',
+                        '小吉': '适合加仓，中期趋势向好。',
+                        '空亡': '不建议加仓，可能面临调整。'
+                    },
+                    '减仓': {
+                        '大安': '暂不减仓，继续持有。',
+                        '留连': '可以适当减仓，锁定部分利润。',
+                        '速喜': '考虑减仓，短期可能见顶。',
+                        '赤口': '建议减仓，风险逐渐显现。',
+                        '小吉': '暂不减仓，等待更好的卖点。',
+                        '空亡': '强烈建议减仓，避免更大损失。'
+                    },
+                    '出场': {
+                        '大安': '继续持有，暂不出场。',
+                        '留连': '可以出场，获利了结。',
+                        '速喜': '建议出场，短期可能回调。',
+                        '赤口': '尽快出场，避免套牢。',
+                        '小吉': '暂不出场，还有上涨空间。',
+                        '空亡': '立即出场，市场可能大幅下跌。'
+                    }
+                };
+                
+                // Cross-validation: if results are the same, high confidence
+                if (traditionalResult === holographicResult) {
+                    return {
+                        confidence: '高',
+                        decision: decisions[queryType][traditionalResult],
+                        suggestion: '双法验证结果一致，建议坚定执行决策。'
+                    };
+                } else {
+                    // If results are different, use the more conservative one
+                    const conservativeMapping = {
+                        '大安': 0, '小吉': 1, '速喜': 2, '留连': 3, '赤口': 4, '空亡': 5
+                    };
+                    
+                    const traditionalScore = conservativeMapping[traditionalResult];
+                    const holographicScore = conservativeMapping[holographicResult];
+                    const finalResult = traditionalScore > holographicScore ? traditionalResult : holographicResult;
+                    
+                    return {
+                        confidence: '中',
+                        decision: decisions[queryType][finalResult],
+                        suggestion: '双法验证结果存在差异，建议谨慎操作，可考虑分批执行。'
+                    };
+                }
+            },
+            
+            // Get target price and stop loss suggestion (simulated)
+            getTargetAndStopLoss: (currentPrice, decision) => {
+                const randomFactor = (min, max) => Math.random() * (max - min) + min;
+                
+                if (decision.includes('强烈建议进场') || decision.includes('强烈建议加仓')) {
+                    const targetIncrease = randomFactor(0.15, 0.3);
+                    const stopLossDecrease = randomFactor(0.05, 0.08);
+                    return {
+                        targetPrice: (currentPrice * (1 + targetIncrease)).toFixed(2),
+                        stopLoss: (currentPrice * (1 - stopLossDecrease)).toFixed(2),
+                        timeframe: '1-3个月'
+                    };
+                } else if (decision.includes('可以进场') || decision.includes('可以加仓') || decision.includes('适合进场') || decision.includes('适合加仓')) {
+                    const targetIncrease = randomFactor(0.08, 0.15);
+                    const stopLossDecrease = randomFactor(0.03, 0.06);
+                    return {
+                        targetPrice: (currentPrice * (1 + targetIncrease)).toFixed(2),
+                        stopLoss: (currentPrice * (1 - stopLossDecrease)).toFixed(2),
+                        timeframe: '2周至1个月'
+                    };
+                } else if (decision.includes('谨慎')) {
+                    const targetIncrease = randomFactor(0.03, 0.08);
+                    const stopLossDecrease = randomFactor(0.02, 0.04);
+                    return {
+                        targetPrice: (currentPrice * (1 + targetIncrease)).toFixed(2),
+                        stopLoss: (currentPrice * (1 - stopLossDecrease)).toFixed(2),
+                        timeframe: '1-2周'
+                    };
+                } else {
+                    return {
+                        targetPrice: 'N/A',
+                        stopLoss: 'N/A',
+                        timeframe: 'N/A'
+                    };
+                }
+            }
+        };
+
+        // Main Application Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize animations
+            typingEffect(
+                document.getElementById('typing-text'),
+                ['股票决策', '投资分析', '市场预测'],
+                80, 
+                1000
+            );
+            
+            mouseFollowEffect();
+            parallaxEffect();
+            setupScrollReveal();
+            lucide.createIcons();
+
+            // Form submission
+            const stockForm = document.getElementById('stock-form');
+            const resultContainer = document.getElementById('result-container');
+            const historyContainer = document.getElementById('history-container');
+
+            stockForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const stockCode = document.getElementById('stock-code').value;
+                const queryType = document.getElementById('query-type').value;
+                const lunarMonth = parseInt(document.getElementById('lunar-month').value);
+                const lunarDay = parseInt(document.getElementById('lunar-day').value);
+                const lunarHour = parseInt(document.getElementById('lunar-hour').value);
+                
+                if (!stockCode) {
+                    alert('请输入股票代码');
+                    return;
+                }
+                
+                // Calculate Liu Ren results
+                const traditionalMonth = liuRenCalculator.traditional.getMonth(lunarMonth);
+                const traditionalDay = liuRenCalculator.traditional.getDay(lunarDay);
+                const traditionalHour = liuRenCalculator.traditional.getHour(lunarHour);
+                const traditionalOverall = liuRenCalculator.getOverallResult(traditionalMonth, traditionalDay, traditionalHour);
+                
+                const holographicMonth = liuRenCalculator.holographic.getMonth(lunarMonth);
+                const holographicDay = liuRenCalculator.holographic.getDay(lunarDay);
+                const holographicHour = liuRenCalculator.holographic.getHour(lunarHour);
+                const holographicOverall = liuRenCalculator.getOverallResult(holographicMonth, holographicDay, holographicHour);
+                
+                // Get stock decision
+                const decision = liuRenCalculator.getStockDecision(traditionalOverall, holographicOverall, queryType);
+                
+                // Simulate current price (for demo purposes)
+                const currentPrice = (Math.random() * 90 + 10).toFixed(2);
+                
+                // Get target and stop loss
+                const targetAndStopLoss = liuRenCalculator.getTargetAndStopLoss(parseFloat(currentPrice), decision.decision);
+                
+                // Display results
+                resultContainer.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-lg font-medium mb-3">传统小六壬</h4>
+                                <div class="space-y-2 text-gray-400">
+                                    <p>月：${traditionalMonth}</p>
+                                    <p>日：${traditionalDay}</p>
+                                    <p>时：${traditionalHour}</p>
+                                    <p class="font-light text-white mt-3">综合：${traditionalOverall}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-medium mb-3">全息小六壬</h4>
+                                <div class="space-y-2 text-gray-400">
+                                    <p>月：${holographicMonth}</p>
+                                    <p>日：${holographicDay}</p>
+                                    <p>时：${holographicHour}</p>
+                                    <p class="font-light text-white mt-3">综合：${holographicOverall}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-800 pt-6">
+                            <h4 class="text-lg font-medium mb-3">决策建议</h4>
+                            <div class="space-y-4">
+                                <p class="text-xl">${decision.decision}</p>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-gray-400">信心指数：</span>
+                                    <span class="px-3 py-1 rounded-full text-sm ${decision.confidence === '高' ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}">${decision.confidence}</span>
+                                </div>
+                                <p class="text-gray-400 italic">${decision.suggestion}</p>
+                            </div>
+                        </div>
+                        
+                        ${targetAndStopLoss.targetPrice !== 'N/A' ? `
+                        <div class="border-t border-gray-800 pt-6">
+                            <h4 class="text-lg font-medium mb-3">目标与止损</h4>
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div class="bg-black/50 p-4 rounded-lg">
+                                    <p class="text-gray-400 mb-1">当前价格</p>
+                                    <p class="text-2xl">¥${currentPrice}</p>
+                                </div>
+                                <div class="bg-black/50 p-4 rounded-lg">
+                                    <p class="text-gray-400 mb-1">目标价格</p>
+                                    <p class="text-2xl text-green-400">¥${targetAndStopLoss.targetPrice}</p>
+                                </div>
+                                <div class="bg-black/50 p-4 rounded-lg">
+                                    <p class="text-gray-400 mb-1">止损价格</p>
+                                    <p class="text-2xl text-red-400">¥${targetAndStopLoss.stopLoss}</p>
+                                </div>
+                                <div class="bg-black/50 p-4 rounded-lg">
+                                    <p class="text-gray-400 mb-1">预期周期</p>
+                                    <p class="text-2xl">${targetAndStopLoss.timeframe}</p>
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                // Save to history
+                const historyItem = {
+                    stockCode,
+                    queryType,
+                    date: new Date().toLocaleString(),
+                    lunarDate: `${lunarMonth}月${lunarDay}日`,
+                    decision: decision.decision,
+                    confidence: decision.confidence
+                };
+                
+                let history = JSON.parse(localStorage.getItem('liuRenHistory') || '[]');
+                history.unshift(historyItem);
+                localStorage.setItem('liuRenHistory', JSON.stringify(history));
+                
+                updateHistoryDisplay();
+            });
+            
+            // Update history display
+            function updateHistoryDisplay() {
+                const history = JSON.parse(localStorage.getItem('liuRenHistory') || '[]');
+                
+                if (history.length === 0) {
+                    historyContainer.innerHTML = `
+                        <div class="text-center text-gray-400 py-12">
+                            <p>暂无历史决策记录</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                historyContainer.innerHTML = history.map(item => `
+                    <div class="border-b border-gray-800 pb-4 last:border-0 last:pb-0">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="text-lg">${item.stockCode} - ${item.queryType}</h4>
+                                <p class="text-gray-400 text-sm">${item.date} (${item.lunarDate})</p>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-sm ${item.confidence === '高' ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'}">${item.confidence}</span>
+                        </div>
+                        <p class="mt-2">${item.decision}</p>
+                    </div>
+                `).join('');
+            }
+            
+            // Initial history display update
+            updateHistoryDisplay();
+        });
+    </script>
+</body>
+</html>
